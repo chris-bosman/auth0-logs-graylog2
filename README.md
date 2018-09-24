@@ -1,68 +1,46 @@
-# Auth0 - Logs to GrayLog2
+# Auth0 / Graylog Integration
 
-This project is a simple Node.js application which will take all of your Auth0 logs and exports them to GrayLog2. 
+**NOTE:** For the original ReadMe of this base project, which is forked from [here](https://github.com/saltukalakus/auth0-logs-graylog2), open [OriginalRM.md](https://github.com/chris-bosman/blob/master/OriginalRM.md).
 
-For debug purposes you could also store to a local file if you enable FILELOG_ENABLE option.
-Note that storing to file is not meant to be used in production because it won't scale well.
-File log option stores in this path `./logs/auth0.logs` in the same folder where this application runs.
+The intended purpose of this fork is to provide a containerized version of the original project, to use as the basis of a Helm chart for deploying into a Kubernetes cluster.
 
-## Configure
-* Install Node.js and Npm in your local environment if you haven't installed yet.
+## Prerequisites
 
-* Create a new client for your Logger as described [here](https://auth0.com/docs/api/management/v2/tokens#1-create-and-authorize-a-client).
-Note that, inorder to receive logs from Auth0, you need to set `read:logs` scope for this client.
+### Auth0
 
-* In your GrayLog2 server create a new [HTTP GELF endpoint](http://docs.graylog.org/en/2.2/pages/sending_data.html#gelf-via-http). 
+Log into your Auth0 account and perform the following steps:
 
-* Copy .env.example as .env in the same folder. Update the .env for your Auth0 Logger client created in the previous step.
+* Go to Applications > Create Application
+* Choose a name for the application (i.e., 'auth0-logs-to-graylog')
+* Select 'Machine to Machine Applications' -> Create
+* Select the API 'Auth0 Management API'
+* A list of scopes will appear, in the search bar labeled 'Filter Scopes' search for 'logs' -> Check the box for the scope 'read:logs' -> Authorize
 
-    * <b>AUTH0_CLIENT_ID</b> : Your Auth0 Logger API client ID.
-    * <b>AUTH0_CLIENT_SECRET</b> : Your Auth0 Logger API client secret.
-    * <b>AUTH0_DOMAIN</b> : Your Auth0 account domain. YOUR_DOMAIN.auth0.com or YOUR_DOMAIN.(au|eu).auth0.com 
-    * <b>BATCH_SIZE</b> : Batch size to request logs in single API call. Set to 100 which is the default value.
-    * <b>START_FROM_ID</b> : Set the log _id to start logging from a specific point in time. If you want to start from the beginning set `null`. Once the log file is created, application resumes from the last log in the log file.
-    * <b>POLLING_INTERVAL_IN_SEC</b> : Interval where log API is polled in seconds. Set something based on log creation speed, for most accounts 30 seconds should be enough.
-    * <b>TRACK_THE_LATEST_IN_SEC</b> : When the logger reaches to the edge of the Auth0 logs, it makes extra delay before the next pass for Auth0 logs to be stabilised. Set this something like 600 seconds.
-    * <b>FILTER_CLIENTS_WITH_ID</b> : Leave it blank if you want all clients in the logs. Otherwise add client IDs separated with comma. Check `.env.example` for a sample usage.
-    * <b>GRAYLOG2_HOST</b> : Graylog2 server host name, E.g. 127.0.0.1 for HTTP Gelf endpoint.
-    * <b>GRAYLOG2_PORT</b> : Graylog2 server port for HTTP Gelf endpoint.
-    * <b>GRAYLOG2_META</b> : Optional static meta you may want to add for each log message.
-    * <b>FILELOG_ENABLE</b> : Setting this to `false` disables file logging.
+In the settings for your newly-created application, save the following values:
 
-## Limitations
-* Graylog2 Gelf Endpoint should be an HTTP endpoint not a HTTPS.
-* You could use PM2 or Forever packages to run the application in production environments. However note that you need to run single instance per your different environment setup. This is basically because multiple instances will not cooperate and share the load but will try to push the same logs to the transport.
+* Domain
+* ClientID
+* ClientSecret
 
-## Usage
-```bash
-   npm install
-   npm start
-```
+### Graylog
 
-## Issue Reporting
+* Go to System > Inputs
+* In the Drop-down menu, find 'GELF HTTP Input' > Launch New Input
+* You can leave all the default values for the configuration. Ensure you save the value of the port of you have configured here.
 
-If you have found a bug or if you have a feature request, please report them at this repository issues section. Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://auth0.com/whitehat) details the procedure for disclosing security issues.
+## Configuration
 
-## Author
+Configuration has been moved from a .env file in the original project to container Environment Variables in this iteration of the project. To
+setup the container so it can communicate with your Auth0 tenant and your Graylog input, customize the Dockerfile according to the comments within.
 
-[Auth0](auth0.com)
+## Running
 
-## What is Auth0?
+To run this container, ensure your Dockerfile is set with the correct environment variables. Then...
 
-Auth0 helps you to:
+* Build it: `docker build . -t auth0-logs-graylog2-forwarder`
+* Run it, providing your Auth0 Client Secret via the CLI: `docker run -d -e AUTH0_CLIENT_SECRET=YourClientSecret auth0-logs-graylog2-forwarder`
+* If you want to enable local logging via a volume mount, add the following to the above `run` command, prior to the `-e` environment variable declration: `-v <local_directory>:/app/logs`
 
-* Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders), either social like **Google, Facebook, Microsoft Account, LinkedIn, GitHub, Twitter, Box, Salesforce, among others**, or enterprise identity systems like **Windows Azure AD, Google Apps, Active Directory, ADFS or any SAML Identity Provider**.
-* Add authentication through more traditional **[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
-* Add support for **[linking different user accounts](https://docs.auth0.com/link-accounts)** with the same user.
-* Support for generating signed [Json Web Tokens](https://docs.auth0.com/jwt) to call your APIs and **flow the user identity** securely.
-* Analytics of how, when and where users are logging in.
-* Pull data from other sources and add it to the user profile, through [JavaScript rules](https://docs.auth0.com/rules).
+### Running in Kubernetes
 
-## Create a free Auth0 Account
-
-1. Go to [Auth0](https://auth0.com) and click Sign Up.
-2. Use Google, GitHub or Microsoft Account to login.
-
-## License
-
-This project is licensed under the MIT license. See the [LICENSE](LICENSE) file for more info.
+If you would like to deploy this container into a Kubernetes cluster, please visit the README for its helm-chart [here](https://github.com/chris-bosman/blob/master/public-helm-charts/auth0forwarder/README.md).
