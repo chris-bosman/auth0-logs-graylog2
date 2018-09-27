@@ -44,4 +44,4 @@ To run this container, ensure your Dockerfile is set with the correct environmen
 
 ### Running in Kubernetes
 
-If you would like to deploy this container into a Kubernetes cluster, please visit the README for its helm-chart [here](https://github.com/chris-bosman/blob/master/public-helm-charts/auth0forwarder/README.md).
+If you would like to deploy this container into a Kubernetes cluster, please visit the README for its helm-chart [here](https://github.com/chris-bosman/public-helm-charts/blob/master/auth0forwarder/README.md).
