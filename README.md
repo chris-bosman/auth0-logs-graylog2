@@ -37,8 +37,9 @@ setup the container so it can communicate with your Auth0 tenant and your Graylo
 
 To run this container, ensure your Dockerfile is set with the correct environment variables. Then...
 
-* Build it: `docker build . -t auth0-logs-graylog2-forwarder`
-* Run it, providing your Auth0 Client Secret via the CLI: `docker run -d -e AUTH0_CLIENT_SECRET=YourClientSecret auth0-logs-graylog2-forwarder`
+* Edit the `.env.example` file with your settings, then save it as `.env`
+* Build the docker image: `docker build . -t auth0-logs-graylog2-forwarder`
+* Run the docker image, providing your Auth0 Client Secret via the CLI: `docker run -d -e AUTH0_CLIENT_SECRET=YourClientSecret auth0-logs-graylog2-forwarder`
 * If you want to enable local logging via a volume mount, add the following to the above `run` command, prior to the `-e` environment variable declration: `-v <local_directory>:/app/logs`
 
 ### Running in Kubernetes
